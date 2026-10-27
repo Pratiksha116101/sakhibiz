@@ -1,0 +1,75 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: sakhibiz
+      MYSQL_USER: ${DB_USER:?Set DB_USER in .env.docker}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env.docker}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env.docker}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks: [private]
+
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      API_PORT: 3001
+      CLIENT_ORIGIN: https://${DOMAIN:?Set DOMAIN in .env.docker}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env.docker}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${DB_USER:?Set DB_USER in .env.docker}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env.docker}
+      DB_NAME: sakhibiz
+      UPLOAD_DIR: /app/uploads/products
+    volumes:
+      - product-uploads:/app/uploads/products
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 20s
+    networks: [private]
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env.docker}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [private]
+
+networks:
+  private:
+
+volumes:
+  mysql-data:
+  product-uploads:
+  caddy-data:
+  caddy-config:

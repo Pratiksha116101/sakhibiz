@@ -1,0 +1,13 @@
+{
+  "name": "SakhiBiz — Learn, Grow, Succeed",
+  "short_name": "SakhiBiz",
+  "description": "Practical business learning and tools for women entrepreneurs.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8f7fc",
+  "theme_color": "#6d4aff",
+  "icons": [
+    { "src": "/sakhibiz.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

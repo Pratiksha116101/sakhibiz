@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.docker
+*.pem
+*.key
+uploads/products/*
+!uploads/products/.gitkeep
