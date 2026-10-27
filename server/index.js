@@ -324,4 +324,10 @@ app.use((error, _req, res, _next) => {
 });
 
 if (!jwtSecret) throw new Error("JWT_SECRET must be set in production.");
-app.listen(port, process.env.HOST || "0.0.0.0", () => console.log(`SakhiBiz server listening on port ${port}`));
+export default app;
+
+if (process.env.VERCEL !== "1") {
+  app.listen(port, process.env.HOST || "0.0.0.0", () => {
+    console.log(`SakhiBiz server listening on port ${port}`);
+  });
+}
