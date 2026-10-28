@@ -52,8 +52,11 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || "sakhibiz",
 
   ssl: process.env.DB_HOST
-    ? { rejectUnauthorized: true }
-    : undefined,
+  ? {
+      ca: process.env.DB_SSL_CA,
+      rejectUnauthorized: true
+    }
+  : undefined,
 
   waitForConnections: true,
   connectionLimit: 10,
